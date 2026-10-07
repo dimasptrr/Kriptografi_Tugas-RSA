@@ -12,19 +12,51 @@
 
     <div class="container">
 
+        <!-- HEADER -->
         <header class="header">
             <h1>APLIKASI PENYIMPANAN PASSWORD DENGAN RSA</h1>
-            <p class="subtitle">
-                Implementasi Algoritma Kriptografi RSA dari Scratch (Python Backend & Vanilla JS Frontend)
-            </p>
+            <p class="subtitle">Studi Kasus Penyimpanan Password Terenkripsi (Browser Side & Python Backend)</p>
         </header>
 
-        <!-- ========================= -->
-        <!-- MENU 1. PEMBANGKITAN KUNCI -->
-        <!-- ========================= -->
-        <section class="card">
-            <h2>1. Pembangkitan Kunci RSA (Key Generation)</h2>
-            <p class="card-desc">Masukkan dua bilangan prima p dan q untuk menghitung pasangan Public Key dan Private Key.</p>
+        <!-- 1. ALUR KERJA RSA (Visual Flowcard) -->
+        <section class="card flow-card">
+            <h2>Alur Kerja RSA</h2>
+            <div class="flow-diagram">
+                <div class="flow-node">
+                    <div class="node-label">1</div>
+                    <strong>RSA Key Pair</strong>
+                    <small>Generate Key (p, q)</small>
+                </div>
+                <div class="flow-arrow">--&gt;</div>
+                <div class="flow-node">
+                    <div class="node-label">2</div>
+                    <strong>Pilih Aktivitas</strong>
+                    <small>Simpan atau Lihat</small>
+                </div>
+                <div class="flow-arrow">--&gt;</div>
+                <div class="flow-branches">
+                    <div class="branch branch-save">
+                        <span class="badge badge-save">ENKRIPSI</span>
+                        <small>Plaintext &rarr; Public Key &rarr; Ciphertext &rarr; localStorage</small>
+                    </div>
+                    <div class="branch branch-view">
+                        <span class="badge badge-view">DEKRIPSI</span>
+                        <small>localStorage &rarr; Private Key &rarr; Plaintext</small>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. RSA KEY MANAGEMENT & STATUS -->
+        <section class="card key-management-card">
+            <div class="card-header">
+                <h2>RSA Key Management</h2>
+                <div id="keyStatusBadge" class="status-badge status-inactive">
+                    RSA Key Belum Tersedia
+                </div>
+            </div>
+
+            <p class="card-desc">Masukkan dua bilangan prima p dan q untuk menghasilkan kunci RSA aktif.</p>
 
             <div class="input-row">
                 <div>
@@ -37,30 +69,19 @@
                 </div>
             </div>
 
-            <button type="button" onclick="generateKey()" class="btn btn-primary">
-                🔑 Generate Key RSA
+            <button type="button" onclick="handleGenerateKeyClick()" class="btn btn-primary">
+                Generate Key RSA
             </button>
 
-            <div class="result-box">
-                <div class="result-item">
-                    <strong>Modulus (n = p × q):</strong>
-                    <span id="nResult" class="code-badge">-</span>
+            <!-- Ringkasan Key Details (Muncul jika key aktif) -->
+            <div id="keyDetailsBox" class="result-box" style="display: none;">
+                <div class="result-grid">
+                    <div><strong>Modulus (n = p x q):</strong> <span id="nResult" class="code-badge">-</span></div>
+                    <div><strong>Euler Totient [phi(n)]:</strong> <span id="phiResult" class="code-badge">-</span></div>
+                    <div><strong>Public Exponent (e):</strong> <span id="eResult" class="code-badge">-</span></div>
+                    <div><strong>Private Exponent (d):</strong> <span id="dResult" class="code-badge">-</span></div>
                 </div>
-                <div class="result-item">
-                    <strong>Euler Totient [φ(n) = (p-1)(q-1)]:</strong>
-                    <span id="phiResult" class="code-badge">-</span>
-                </div>
-                <div class="result-item">
-                    <strong>Public Exponent (e):</strong>
-                    <span id="eResult" class="code-badge">-</span>
-                </div>
-                <div class="result-item">
-                    <strong>Private Exponent (d):</strong>
-                    <span id="dResult" class="code-badge">-</span>
-                </div>
-                
                 <hr>
-
                 <div class="key-box">
                     <div class="key-item">
                         <strong>Public Key (e, n):</strong>
@@ -74,13 +95,32 @@
             </div>
         </section>
 
+        <!-- 3. PILIH AKTIVITAS (Tampil jika Key sudah Aktif) -->
+        <section id="activitySelectionSection" class="card activity-section" style="display: none;">
+            <h2>Pilih Aktivitas</h2>
+            <p class="card-desc">Kunci RSA telah aktif. Pilih aktivitas yang ingin dilakukan:</p>
 
-        <!-- ========================= -->
-        <!-- MENU 2. SIMPAN PASSWORD -->
-        <!-- ========================= -->
-        <section class="card">
-            <h2>2. Simpan Password Terenkripsi</h2>
-            <p class="card-desc">Password akan dienkripsi dengan Public Key RSA sebelum disimpan ke localStorage.</p>
+            <div class="activity-grid">
+                <div class="activity-card" id="cardSave" onclick="switchActivity('save')">
+                    <div class="act-icon">🔐</div>
+                    <h3>SIMPAN PASSWORD</h3>
+                    <p>Enkripsi dan simpan password baru menggunakan Public Key RSA</p>
+                    <button type="button" class="btn btn-act">Mulai Simpan</button>
+                </div>
+
+                <div class="activity-card" id="cardView" onclick="switchActivity('view')">
+                    <div class="act-icon">🔓</div>
+                    <h3>LIHAT PASSWORD</h3>
+                    <p>Dekripsi password yang tersimpan menggunakan Private Key RSA</p>
+                    <button type="button" class="btn btn-act">Lihat Daftar</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4A. SECTION SIMPAN PASSWORD -->
+        <section id="savePasswordSection" class="card activity-content-card" style="display: none;">
+            <h2>Simpan &amp; Enkripsi Password Baru</h2>
+            <p class="card-desc">Password akan diubah ke kode ASCII lalu dienkripsi menggunakan Public Key RSA sebelum disimpan ke localStorage.</p>
 
             <div class="form-group">
                 <label for="website">Nama Website / Aplikasi</label>
@@ -98,51 +138,45 @@
             </div>
 
             <button type="button" onclick="savePassword()" class="btn btn-success">
-                🔒 Simpan & Enkripsi
+                Simpan &amp; Enkripsi
             </button>
 
-            <div class="result-box">
+            <div id="saveResultBox" class="result-box" style="display: none;">
                 <div class="result-item">
                     <strong>Plaintext (Sebelum Enkripsi):</strong>
                     <span id="originalPassword" class="code-badge">-</span>
                 </div>
-                <div class="result-item">
+                <div class="result-item" style="margin-top: 10px;">
                     <strong>Ciphertext (Tersimpan di localStorage):</strong>
                 </div>
-                <div id="encryptedPassword" class="ciphertext-display">
-                    -
-                </div>
+                <div id="encryptedPassword" class="ciphertext-display">-</div>
+                <p class="info-note">Password dienkripsi menggunakan Public Key RSA sebelum disimpan.</p>
             </div>
         </section>
 
-
-        <!-- ========================= -->
-        <!-- MENU 3. PASSWORD TERSIMPAN -->
-        <!-- ========================= -->
-        <section class="card">
-            <h2>3. Daftar Password Tersimpan (localStorage)</h2>
-            <p class="card-desc">Password disimpan dalam bentuk Ciphertext. Klik tombol dekripsi untuk memprosesnya dengan Private Key RSA.</p>
+        <!-- 4B. SECTION LIHAT PASSWORD -->
+        <section id="viewPasswordSection" class="card activity-content-card" style="display: none;">
+            <h2>Daftar Password Tersimpan</h2>
+            <p class="card-desc">Ciphertext diambil dari localStorage. Klik tombol dekripsi untuk memprosesnya menggunakan Private Key RSA aktif.</p>
 
             <div id="passwordList" class="password-list">
-                <p class="empty-state">Belum ada password yang tersimpan.</p>
+                <p class="empty-state">Belum ada password yang tersimpan di localStorage.</p>
             </div>
         </section>
 
+    </div>
 
-        <!-- ========================= -->
-        <!-- ALUR & STUDI KASUS RSA -->
-        <!-- ========================= -->
-        <section class="card info-card">
-            <h2>4. Alur Kerja RSA (Studi Kasus Password Manager)</h2>
-            <ol class="flow-list">
-                <li><strong>Generate Key:</strong> Pengguna memasukkan <code>p</code> dan <code>q</code>. Backend Python menghitung <code>n</code>, <code>φ(n)</code>, <code>e</code>, dan <code>d</code>.</li>
-                <li><strong>Teks → Angka:</strong> Password asli diubah menjadi nilai ASCII (modul <code>rsa/converter.py</code>).</li>
-                <li><strong>Enkripsi RSA:</strong> Setiap kode ASCII dienkripsi menggunakan rumus <code>c = m^e mod n</code> (modul <code>rsa/encryption.py</code>).</li>
-                <li><strong>Penyimpanan Safe:</strong> <code>localStorage</code> browser HANYA menyimpan array ciphertext <code>[c1, c2, c3, ...]</code>.</li>
-                <li><strong>Dekripsi RSA:</strong> Saat pengguna klik dekripsi, ciphertext dikirim ke Python backend untuk didekripsi menggunakan rumus <code>m = c^d mod n</code> (modul <code>rsa/decryption.py</code>), lalu dikonversi kembali ke teks asli.</li>
-            </ol>
-        </section>
-
+    <!-- MODAL KONFIRMASI GENERATE KEY BARU -->
+    <div id="confirmModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <h3>Konfirmasi Generate Key Baru</h3>
+            <p>Generate key baru akan mengganti RSA Key aktif. Data password yang dienkripsi menggunakan key lama mungkin tidak dapat didekripsi lagi.</p>
+            <p><strong>Apakah Anda yakin ingin melanjutkan?</strong></p>
+            <div class="modal-buttons">
+                <button type="button" onclick="closeConfirmModal()" class="btn btn-secondary">Batal</button>
+                <button type="button" onclick="proceedGenerateKey()" class="btn btn-danger">Ya, Generate Key Baru</button>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>

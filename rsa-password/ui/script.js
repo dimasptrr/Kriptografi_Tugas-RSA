@@ -1,26 +1,54 @@
 /* =====================================================
    UI SCRIPT (VANILLA JAVASCRIPT)
-   Menangani event UI, localStorage, dan komunikasi ke Backend Python API.
-   TIDAK BERISI IMPLEMENTASI MATEMATIKA RSA (Seluruh RSA di modul Python rsa/).
+   Menangani interaksi UI, state management, modal,
+   localStorage, dan komunikasi ke Backend Python API.
    ===================================================== */
 
-// State Kunci RSA global di browser
-let rsaKey = {
-    p: null,
-    q: null,
-    n: null,
-    phi: null,
-    e: null,
-    d: null,
-    publicKey: null,
-    privateKey: null
+// State Kunci RSA aktif di browser
+let rsaKeyActive = null;
+
+
+// =====================================================
+// 1. INSISIALISASI SAAT HALAMAN DIBUKA
+// =====================================================
+window.onload = function () {
+    // Coba ambil RSA Key yang tersimpan dari localStorage (jika ada)
+    // CATATAN: Pendekatan menyimpan rsaKeyActive di localStorage ini digunakan khusus 
+    // untuk demonstrasi tugas kuliah agar key pair tetap konsisten saat halaman di-reload.
+    const savedKey = localStorage.getItem("rsaKeyActive");
+
+    if (savedKey) {
+        try {
+            rsaKeyActive = JSON.parse(savedKey);
+            updateKeyStatusUI();
+        } catch (e) {
+            console.error("Gagal membaca rsaKeyActive dari storage", e);
+        }
+    }
+
+    displayPasswords();
 };
 
 
 // =====================================================
-// 1. GENERATE RSA KEY (Memanggil Backend Python API)
+// 2. MANAGEMENT KEY & STATUS RSA
 // =====================================================
-async function generateKey() {
+function handleGenerateKeyClick() {
+    // Jika key sudah aktif, minta konfirmasi terlebih dahulu
+    if (rsaKeyActive) {
+        document.getElementById("confirmModal").style.display = "flex";
+    } else {
+        proceedGenerateKey();
+    }
+}
+
+function closeConfirmModal() {
+    document.getElementById("confirmModal").style.display = "none";
+}
+
+async function proceedGenerateKey() {
+    closeConfirmModal();
+
     const pInput = document.getElementById("p").value;
     const qInput = document.getElementById("q").value;
 
@@ -46,37 +74,91 @@ async function generateKey() {
         }
 
         // Simpan kunci ke state JavaScript
-        rsaKey.p = data.p;
-        rsaKey.q = data.q;
-        rsaKey.n = data.n;
-        rsaKey.phi = data.phi;
-        rsaKey.e = data.e;
-        rsaKey.d = data.d;
-        rsaKey.publicKey = { e: data.e, n: data.n };
-        rsaKey.privateKey = { d: data.d, n: data.n };
+        rsaKeyActive = {
+            p: data.p,
+            q: data.q,
+            n: data.n,
+            phi: data.phi,
+            e: data.e,
+            d: data.d,
+            publicKey: { e: data.e, n: data.n },
+            privateKey: { d: data.d, n: data.n }
+        };
 
-        // Tampilkan ke UI
-        document.getElementById("nResult").textContent = data.n;
-        document.getElementById("phiResult").textContent = data.phi;
-        document.getElementById("eResult").textContent = data.e;
-        document.getElementById("dResult").textContent = data.d;
+        // Simpan key aktif ke localStorage agar tetap konsisten saat reload
+        localStorage.setItem("rsaKeyActive", JSON.stringify(rsaKeyActive));
 
-        document.getElementById("publicKeyResult").textContent = `(e = ${data.e}, n = ${data.n})`;
-        document.getElementById("privateKeyResult").textContent = `(d = ${data.d}, n = ${data.n})`;
+        // Update Tampilan UI
+        updateKeyStatusUI();
 
-        alert("✅ RSA Key Pasangan Berhasil Dihasilkan oleh Backend Python!");
+        alert("RSA Key Pair Berhasil Dihasilkan oleh Backend Python!");
     } catch (err) {
         alert("⚠️ Error: " + err.message);
     }
 }
 
+function updateKeyStatusUI() {
+    if (!rsaKeyActive) return;
+
+    // Status Badge
+    const badge = document.getElementById("keyStatusBadge");
+    badge.className = "status-badge status-active";
+    badge.textContent = "RSA Key Aktif";
+
+    // Tampilkan detail nilai matematika
+    document.getElementById("nResult").textContent = rsaKeyActive.n;
+    document.getElementById("phiResult").textContent = rsaKeyActive.phi;
+    document.getElementById("eResult").textContent = rsaKeyActive.e;
+    document.getElementById("dResult").textContent = rsaKeyActive.d;
+
+    document.getElementById("publicKeyResult").textContent = `(e = ${rsaKeyActive.e}, n = ${rsaKeyActive.n})`;
+    document.getElementById("privateKeyResult").textContent = `(d = ${rsaKeyActive.d}, n = ${rsaKeyActive.n})`;
+
+    document.getElementById("keyDetailsBox").style.display = "block";
+
+    // Tampilkan Section Pilih Aktivitas
+    document.getElementById("activitySelectionSection").style.display = "block";
+}
+
 
 // =====================================================
-// 2. SIMPAN & ENKRIPSI PASSWORD
+// 3. SWITCH AKTIVITAS (SIMPAN / LIHAT PASSWORD)
+// =====================================================
+function switchActivity(type) {
+    if (!rsaKeyActive) {
+        alert("RSA Key belum tersedia. Silakan Generate Key terlebih dahulu!");
+        return;
+    }
+
+    const cardSave = document.getElementById("cardSave");
+    const cardView = document.getElementById("cardView");
+    const saveSec = document.getElementById("savePasswordSection");
+    const viewSec = document.getElementById("viewPasswordSection");
+
+    if (type === 'save') {
+        cardSave.classList.add("active-activity");
+        cardView.classList.remove("active-activity");
+
+        saveSec.style.display = "block";
+        viewSec.style.display = "none";
+    } else if (type === 'view') {
+        cardView.classList.add("active-activity");
+        cardSave.classList.remove("active-activity");
+
+        viewSec.style.display = "block";
+        saveSec.style.display = "none";
+
+        displayPasswords();
+    }
+}
+
+
+// =====================================================
+// 4. SIMPAN PASSWORD (ENKRIPSI MENGGUNAKAN PUBLIC KEY)
 // =====================================================
 async function savePassword() {
-    if (!rsaKey.publicKey) {
-        alert("⚠️ Silakan Generate Key RSA terlebih dahulu sebelum menyimpan password!");
+    if (!rsaKeyActive) {
+        alert("Silakan Generate Key RSA terlebih dahulu!");
         return;
     }
 
@@ -85,18 +167,18 @@ async function savePassword() {
     const password = document.getElementById("password").value;
 
     if (!website || !username || !password) {
-        alert("⚠️ Semua field (Website, Username, dan Password) harus diisi!");
+        alert("Semua field (Website, Username, dan Password) harus diisi!");
         return;
     }
 
     try {
-        // Kirim password asli dan Public Key ke backend Python untuk dienkripsi
+        // Enkripsi password menggunakan Public Key RSA di Backend Python
         const response = await fetch("/api/encrypt", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 text: password,
-                publicKey: rsaKey.publicKey
+                publicKey: rsaKeyActive.publicKey
             })
         });
 
@@ -106,36 +188,34 @@ async function savePassword() {
             throw new Error(data.error || "Gagal melakukan enkripsi RSA.");
         }
 
-        const ciphertext = data.ciphertext; // Array of numbers
+        const ciphertext = data.ciphertext;
 
-        // Ambil data localStorage saat ini
+        // Ambil data dari localStorage
         let storedPasswords = JSON.parse(localStorage.getItem("rsaPasswords")) || [];
 
-        // Buat objek data baru
-        // CATATAN: Yang disimpan di localStorage ADALAH ciphertext, BUKAN password asli!
+        // CATATAN: Yang disimpan di localStorage ADALAH array ciphertext, BUKAN password asli!
         const newEntry = {
             id: Date.now(),
             website: website,
             username: username,
-            encryptedPassword: ciphertext
+            encryptedPassword: ciphertext,
+            keyModulus: rsaKeyActive.n // Digunakan untuk validasi kesesuaian key
         };
 
         storedPasswords.push(newEntry);
         localStorage.setItem("rsaPasswords", JSON.stringify(storedPasswords));
 
-        // Tampilkan hasil proses enkripsi di UI
+        // Tampilkan hasil proses enkripsi ke UI
         document.getElementById("originalPassword").textContent = password;
         document.getElementById("encryptedPassword").textContent = JSON.stringify(ciphertext);
+        document.getElementById("saveResultBox").style.display = "block";
 
-        // Reset form input
+        // Reset input form
         document.getElementById("website").value = "";
         document.getElementById("username").value = "";
         document.getElementById("password").value = "";
 
-        // Refresh daftar password
-        displayPasswords();
-
-        alert("🔒 Password berhasil dienkripsi dengan Public Key dan disimpan ke localStorage!");
+        alert("Password berhasil dienkripsi dengan Public Key dan disimpan ke localStorage!");
     } catch (err) {
         alert("⚠️ Error: " + err.message);
     }
@@ -143,7 +223,7 @@ async function savePassword() {
 
 
 // =====================================================
-// 3. TAMPILKAN DAFTAR PASSWORD (DARI LOCALSTORAGE)
+// 5. TAMPILKAN DAFTAR PASSWORD (DARI LOCALSTORAGE)
 // =====================================================
 function displayPasswords() {
     const container = document.getElementById("passwordList");
@@ -164,23 +244,24 @@ function displayPasswords() {
 
         card.innerHTML = `
             <div class="password-card-header">
-                <h3>🌐 ${escapeHTML(item.website)}</h3>
-                <span class="username-tag">👤 ${escapeHTML(item.username)}</span>
+                <h3>${escapeHTML(item.website)}</h3>
+                <span class="username-tag" style="font-size: 12px; color: #718096;">Username: ${escapeHTML(item.username)}</span>
             </div>
             
-            <p style="font-size: 13px; font-weight: 600; color: #4a5568;">Ciphertext (Terenkripsi RSA):</p>
+            <p style="font-size: 12px; font-weight: 600; color: #4a5568;">Ciphertext (Terenkripsi RSA):</p>
             <div class="ciphertext-display">${escapeHTML(cipherStr)}</div>
 
             <div style="margin-top: 12px;">
                 <button type="button" class="btn btn-decrypt" onclick="decryptPassword(${item.id})">
-                    🔓 Dekripsi / Lihat Password
+                    Dekripsi Password
                 </button>
                 <button type="button" class="btn btn-delete" onclick="deletePassword(${item.id})">
-                    🗑️ Hapus
+                    Hapus
                 </button>
             </div>
 
             <div id="decrypted-${item.id}" class="decrypted-box"></div>
+            <div id="error-${item.id}" class="error-box"></div>
         `;
 
         container.appendChild(card);
@@ -189,11 +270,18 @@ function displayPasswords() {
 
 
 // =====================================================
-// 4. DEKRIPSI PASSWORD (MEMANGGIL PYTHON API)
+// 6. DEKRIPSI PASSWORD (MENGGUNAKAN PRIVATE KEY AKTIF)
 // =====================================================
 async function decryptPassword(id) {
-    if (!rsaKey.privateKey) {
-        alert("⚠️ Key RSA belum tersedia atau belum di-generate! Silakan Generate Key terlebih dahulu.");
+    const resultBox = document.getElementById(`decrypted-${id}`);
+    const errorBox = document.getElementById(`error-${id}`);
+
+    resultBox.style.display = "none";
+    errorBox.style.display = "none";
+
+    if (!rsaKeyActive) {
+        errorBox.style.display = "block";
+        errorBox.textContent = "RSA Key belum tersedia. Silakan Generate Key terlebih dahulu!";
         return;
     }
 
@@ -201,18 +289,18 @@ async function decryptPassword(id) {
     const item = storedPasswords.find(p => p.id === id);
 
     if (!item) {
-        alert("⚠️ Data password tidak ditemukan!");
+        alert("Data password tidak ditemukan!");
         return;
     }
 
     try {
-        // Kirim array ciphertext dan Private Key ke Python backend untuk didekripsi
+        // Dekripsi ciphertext menggunakan Private Key aktif di Backend Python
         const response = await fetch("/api/decrypt", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 ciphertext: item.encryptedPassword,
-                privateKey: rsaKey.privateKey
+                privateKey: rsaKeyActive.privateKey
             })
         });
 
@@ -222,17 +310,17 @@ async function decryptPassword(id) {
             throw new Error(data.error || "Gagal mendekripsi ciphertext.");
         }
 
-        const resultBox = document.getElementById(`decrypted-${id}`);
         resultBox.style.display = "block";
-        resultBox.innerHTML = `<strong>🔑 Password Asli (Hasil Dekripsi):</strong> <span style="font-size: 16px; font-weight: bold; color: #22543d;">${escapeHTML(data.plaintext)}</span>`;
+        resultBox.innerHTML = `<strong>Password Asli (Hasil Dekripsi):</strong> <span style="font-size: 15px; font-weight: bold; color: #22543d; font-family: monospace;">${escapeHTML(data.plaintext)}</span>`;
     } catch (err) {
-        alert("⚠️ Error Dekripsi: " + err.message);
+        errorBox.style.display = "block";
+        errorBox.textContent = "Ciphertext tidak dapat didekripsi menggunakan RSA Key aktif saat ini.";
     }
 }
 
 
 // =====================================================
-// 5. HAPUS PASSWORD DARI LOCALSTORAGE
+// 7. HAPUS PASSWORD DARI LOCALSTORAGE
 // =====================================================
 function deletePassword(id) {
     let storedPasswords = JSON.parse(localStorage.getItem("rsaPasswords")) || [];
@@ -242,9 +330,7 @@ function deletePassword(id) {
 }
 
 
-// =====================================================
-// UTILITY: ESCAPE HTML (Mencegah XSS)
-// =====================================================
+// Utility: ESCAPE HTML (Mencegah XSS Injection)
 function escapeHTML(text) {
     if (!text) return "";
     return String(text)
@@ -254,9 +340,3 @@ function escapeHTML(text) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
-
-
-// Load daftar password saat halaman pertama kali dibuka
-window.onload = function () {
-    displayPasswords();
-};
