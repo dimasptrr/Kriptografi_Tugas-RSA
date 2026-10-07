@@ -24,23 +24,24 @@ Aplikasi ini merupakan **Password Storage (Penyimpan Password)** berbasis web in
 Struktur direktori dibuat modular sesuai dengan prinsip pemisahan tugas (*separation of concerns*):
 
 ```text
-rsa-password/
-│
-├── main.py                    # Server HTTP & API Router (Python Standard Library)
+.
 ├── README.md                  # Dokumentasi Lengkap Project
-│
-├── rsa/                       # Package Algoritma RSA (100% Implemetasi Sendiri)
-│   ├── __init__.py            # Inisialisasi Package RSA
-│   ├── math_utils.py          # Fungsi Matematika Dasar (GCD, Cek Prima, ModPow, ModInverse)
-│   ├── key_generation.py     # Pembangkitan Pasangan Kunci RSA (n, phi, e, d)
-│   ├── encryption.py          # Fungsi Enkripsi (c = m^e mod n)
-│   ├── decryption.py          # Fungsi Dekripsi (m = c^d mod n)
-│   └── converter.py           # Konversi Teks <-> Kode ASCII
-│
-└── ui/                        # Antarmuka Pengguna (Vanilla Web)
-    ├── index.html             # Tampilan HTML (3 Menu Utama + Info Demo)
-    ├── style.css              # Style Modern, Clean, & Responsif
-    └── script.js              # Interaksi UI, localStorage, & Fetch API
+├── .gitignore                 # Konfigurasi File Abaikan Git
+└── rsa-password/
+    ├── main.py                # Server HTTP & API Router (Python Standard Library)
+    │
+    ├── rsa/                   # Package Algoritma RSA (100% Implemetasi Sendiri)
+    │   ├── __init__.py        # Inisialisasi Package RSA
+    │   ├── math_utils.py      # Fungsi Matematika Dasar (GCD, Cek Prima, ModPow, ModInverse)
+    │   ├── key_generation.py # Pembangkitan Pasangan Kunci RSA (n, phi, e, d)
+    │   ├── encryption.py      # Fungsi Enkripsi (c = m^e mod n)
+    │   ├── decryption.py      # Fungsi Dekripsi (m = c^d mod n)
+    │   └── converter.py       # Konversi Teks <-> Kode ASCII
+    │
+    └── ui/                    # Antarmuka Pengguna (Vanilla Web)
+        ├── index.html         # Tampilan HTML (3 Menu Utama + Info Demo)
+        ├── style.css          # Style Modern, Clean, & Responsif
+        └── script.js          # Interaksi UI, localStorage, & Fetch API
 ```
 
 ---
@@ -159,18 +160,6 @@ Saat melakukan demo di depan dosen, ikuti urutan berikut:
 4. **Langkah 4: Dekripsi Password**
    - Pada Menu 3, klik tombol **Dekripsi / Lihat Password**.
    - Tunjukkan bahwa ciphertext dikirim ke Python backend dan berhasil didekripsi kembali menjadi `rahasia123`.
-
----
-
-## 💡 Tanya Jawab Demo (FAQ Dosen)
-
-| Pertanyaan Dosen | Jawaban & Lokasi Kode |
-| :--- | :--- |
-| **"Mana fungsi FPB / GCD?"** | Ada di [`rsa/math_utils.py`](file:///d:/Kuliah/Semester%205/Kriptografi/Tugas%20RSA/rsa-password/rsa/math_utils.py) pada fungsi `gcd(a, b)`. |
-| **"Mana fungsi pencarian nilai $d$ (ModInverse)?"** | Ada di [`rsa/math_utils.py`](file:///d:/Kuliah/Semester%205/Kriptografi/Tugas%20RSA/rsa-password/rsa/math_utils.py) pada fungsi `mod_inverse(e, phi)` menggunakan Extended Euclidean. |
-| **"Di mana rumus enkripsi RSA dihitung?"** | Ada di [`rsa/encryption.py`](file:///d:/Kuliah/Semester%205/Kriptografi/Tugas%20RSA/rsa-password/rsa/encryption.py) pada fungsi `encrypt_number()` dengan rumus `c = mod_pow(m, e, n)`. |
-| **"Di mana rumus dekripsi RSA dihitung?"** | Ada di [`rsa/decryption.py`](file:///d:/Kuliah/Semester%205/Kriptografi/Tugas%20RSA/rsa-password/rsa/decryption.py) pada fungsi `decrypt_number()` dengan rumus `m = mod_pow(c, d, n)`. |
-| **"Apakah ada library kriptografi pihak ketiga yang digunakan?"** | **TIDAK ADA.** Seluruh algoritma matematika RSA dan server HTTP dibuat 100% dari *scratch* menggunakan Python Standard Library. |
 
 ---
 *Dibuat untuk Tugas Mata Kuliah Kriptografi - Semester 5.*
