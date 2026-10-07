@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Penyimpanan Password RSA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <header class="header">
+            <h1>APLIKASI PENYIMPANAN PASSWORD DENGAN RSA</h1>
+            <p class="subtitle">
+                Implementasi Algoritma Kriptografi RSA dari Scratch (Python Backend & Vanilla JS Frontend)
+            </p>
+        </header>
+
+        <!-- ========================= -->
+        <!-- MENU 1. PEMBANGKITAN KUNCI -->
+        <!-- ========================= -->
+        <section class="card">
+            <h2>1. Pembangkitan Kunci RSA (Key Generation)</h2>
+            <p class="card-desc">Masukkan dua bilangan prima p dan q untuk menghitung pasangan Public Key dan Private Key.</p>
+
+            <div class="input-row">
+                <div>
+                    <label for="p">Bilangan Prima (p)</label>
+                    <input type="number" id="p" value="47" placeholder="Contoh: 47">
+                </div>
+                <div>
+                    <label for="q">Bilangan Prima (q)</label>
+                    <input type="number" id="q" value="71" placeholder="Contoh: 71">
+                </div>
+            </div>
+
+            <button type="button" onclick="generateKey()" class="btn btn-primary">
+                🔑 Generate Key RSA
+            </button>
+
+            <div class="result-box">
+                <div class="result-item">
+                    <strong>Modulus (n = p × q):</strong>
+                    <span id="nResult" class="code-badge">-</span>
+                </div>
+                <div class="result-item">
+                    <strong>Euler Totient [φ(n) = (p-1)(q-1)]:</strong>
+                    <span id="phiResult" class="code-badge">-</span>
+                </div>
+                <div class="result-item">
+                    <strong>Public Exponent (e):</strong>
+                    <span id="eResult" class="code-badge">-</span>
+                </div>
+                <div class="result-item">
+                    <strong>Private Exponent (d):</strong>
+                    <span id="dResult" class="code-badge">-</span>
+                </div>
+                
+                <hr>
+
+                <div class="key-box">
+                    <div class="key-item">
+                        <strong>Public Key (e, n):</strong>
+                        <div id="publicKeyResult" class="key-value">-</div>
+                    </div>
+                    <div class="key-item">
+                        <strong>Private Key (d, n):</strong>
+                        <div id="privateKeyResult" class="key-value">-</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- MENU 2. SIMPAN PASSWORD -->
+        <!-- ========================= -->
+        <section class="card">
+            <h2>2. Simpan Password Terenkripsi</h2>
+            <p class="card-desc">Password akan dienkripsi dengan Public Key RSA sebelum disimpan ke localStorage.</p>
+
+            <div class="form-group">
+                <label for="website">Nama Website / Aplikasi</label>
+                <input type="text" id="website" placeholder="Contoh: Instagram, Gmail, Twitter">
+            </div>
+
+            <div class="form-group">
+                <label for="username">Username / Email</label>
+                <input type="text" id="username" placeholder="Masukkan username atau email">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password Asli</label>
+                <input type="password" id="password" placeholder="Masukkan password yang ingin disimpan">
+            </div>
+
+            <button type="button" onclick="savePassword()" class="btn btn-success">
+                🔒 Simpan & Enkripsi
+            </button>
+
+            <div class="result-box">
+                <div class="result-item">
+                    <strong>Plaintext (Sebelum Enkripsi):</strong>
+                    <span id="originalPassword" class="code-badge">-</span>
+                </div>
+                <div class="result-item">
+                    <strong>Ciphertext (Tersimpan di localStorage):</strong>
+                </div>
+                <div id="encryptedPassword" class="ciphertext-display">
+                    -
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- MENU 3. PASSWORD TERSIMPAN -->
+        <!-- ========================= -->
+        <section class="card">
+            <h2>3. Daftar Password Tersimpan (localStorage)</h2>
+            <p class="card-desc">Password disimpan dalam bentuk Ciphertext. Klik tombol dekripsi untuk memprosesnya dengan Private Key RSA.</p>
+
+            <div id="passwordList" class="password-list">
+                <p class="empty-state">Belum ada password yang tersimpan.</p>
+            </div>
+        </section>
+
+
+        <!-- ========================= -->
+        <!-- ALUR & STUDI KASUS RSA -->
+        <!-- ========================= -->
+        <section class="card info-card">
+            <h2>4. Alur Kerja RSA (Studi Kasus Password Manager)</h2>
+            <ol class="flow-list">
+                <li><strong>Generate Key:</strong> Pengguna memasukkan <code>p</code> dan <code>q</code>. Backend Python menghitung <code>n</code>, <code>φ(n)</code>, <code>e</code>, dan <code>d</code>.</li>
+                <li><strong>Teks → Angka:</strong> Password asli diubah menjadi nilai ASCII (modul <code>rsa/converter.py</code>).</li>
+                <li><strong>Enkripsi RSA:</strong> Setiap kode ASCII dienkripsi menggunakan rumus <code>c = m^e mod n</code> (modul <code>rsa/encryption.py</code>).</li>
+                <li><strong>Penyimpanan Safe:</strong> <code>localStorage</code> browser HANYA menyimpan array ciphertext <code>[c1, c2, c3, ...]</code>.</li>
+                <li><strong>Dekripsi RSA:</strong> Saat pengguna klik dekripsi, ciphertext dikirim ke Python backend untuk didekripsi menggunakan rumus <code>m = c^d mod n</code> (modul <code>rsa/decryption.py</code>), lalu dikonversi kembali ke teks asli.</li>
+            </ol>
+        </section>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
