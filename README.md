@@ -95,26 +95,34 @@ Struktur direktori dibuat modular sesuai dengan prinsip pemisahan tugas (*separa
 
 ---
 
-## 🔄 Alur Kerja Aplikasi
+## Alur Kerja Aplikasi
 
-```text
-[ Input User ]
-      │
-      ▼
-[ script.js ] ──(Fetch POST /api/encrypt)──► [ main.py ]
-                                                   │
-                                                   ▼
-                                         [ rsa/converter.py ]
-                                          (Teks -> ASCII m)
-                                                   │
-                                                   ▼
-                                         [ rsa/encryption.py ]
-                                         (c = m^e mod n)
-                                                   │
-                                                   ▼
-[ localStorage ] ◄──(Return Array c)────── [ Main Response ]
- (HANYA menyimpan c)
-```
+### A. Alur Simpan Password (Enkripsi)
+
+| Langkah | Proses | File |
+| :---: | :--- | :--- |
+| 1 | User memasukkan p dan q, klik **Generate Key** | `ui/script.js` |
+| 2 | Request dikirim ke server Python | `main.py` |
+| 3 | Server menghitung n, phi(n), e, d → menghasilkan Public Key dan Private Key | `rsa/key_generation.py` |
+| 4 | Hasil key dikembalikan ke browser dan ditampilkan | `ui/script.js` |
+| 5 | User mengisi Website, Username, Password → klik **Simpan & Enkripsi** | `ui/script.js` |
+| 6 | Password dikirim ke server bersama Public Key | `main.py` |
+| 7 | Password diubah menjadi array kode ASCII | `rsa/converter.py` |
+| 8 | Setiap kode ASCII dienkripsi: **c = m^e mod n** | `rsa/encryption.py` |
+| 9 | Array ciphertext dikembalikan ke browser | `main.py` |
+| 10 | Ciphertext disimpan di `localStorage` browser (BUKAN plaintext) | `ui/script.js` |
+
+### B. Alur Lihat Password (Dekripsi)
+
+| Langkah | Proses | File |
+| :---: | :--- | :--- |
+| 1 | User membuka daftar password tersimpan | `ui/script.js` |
+| 2 | Ciphertext dibaca dari `localStorage` browser | `ui/script.js` |
+| 3 | User klik **Dekripsi Password** | `ui/script.js` |
+| 4 | Ciphertext dikirim ke server bersama Private Key | `main.py` |
+| 5 | Setiap angka ciphertext didekripsi: **m = c^d mod n** | `rsa/decryption.py` |
+| 6 | Array angka ASCII dikonversi kembali menjadi teks | `rsa/converter.py` |
+| 7 | Password asli dikembalikan dan ditampilkan di browser | `ui/script.js` |
 
 ---
 
