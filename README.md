@@ -61,7 +61,7 @@ Struktur direktori dibuat modular sesuai dengan prinsip pemisahan tugas (*separa
   3. Hitung modulus $n = p \times q$.
   4. Hitung *Euler Totient* $\phi(n) = (p - 1) \times (q - 1)$.
   5. Pilih nilai $e$ yang relatif prima terhadap $\phi(n)$ ($\gcd(e, \phi) = 1$).
-  6. Hitung nilai $d = \text{mod\_inverse}(e, \phi)$.
+  6. Hitung nilai $d$ menggunakan `mod_inverse(e, phi)`.
   7. Mengembalikan **Public Key** $(e, n)$ dan **Private Key** $(d, n)$.
 
 ### 3. Modul Konversi Teks (`rsa/converter.py`)
